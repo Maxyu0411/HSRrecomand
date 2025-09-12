@@ -62,37 +62,45 @@ previous_left = 0
 for i in range(1,13):
     demand = monthly_demand[i]
 
-    # 使用上月剩餘票
+    # 本月淨需求
     net_demand = max(0, demand - previous_left)
-    topup_sets = (net_demand + multi_ticket_count -1)//multi_ticket_count if net_demand>0 else 0
-    cost_topup = topup_sets * round_trip_price
 
-    # 本月回數票成本（累計成本留到次月，不影響本月平均單價）
-    cost_used = 0  # 不計入本月平均單價
+    # 本月 top-up 數量及成本
+    if net_demand > 0:
+        topup_sets = (net_demand + multi_ticket_count -1)//multi_ticket_count
+        cost_m = topup_sets * round_trip_price
+    else:
+        topup_sets = 0
+        cost_m = 0
+
+    # 三種票成本
+    cost_s = demand * one_way_price
+    cost_mo = monthly_price
+    costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
+
+    # 本月推薦票種
+    if net_demand == 0:
+        rec = "無需求"
+        avg_price = 0
+        topup = 0
+    else:
+        rec = min(costs, key=costs.get)
+        topup = topup_sets
+        if rec=="單程票":
+            avg_price = one_way_price
+        elif rec=="月票":
+            avg_price = cost_mo // demand
+        else:  # 回數票
+            avg_price = cost_m // net_demand  # 淨需求趟數平均
+
+    # 更新剩餘票
     leftover = previous_left + topup_sets*multi_ticket_count - net_demand
     previous_left = leftover
 
-    # 三種票成本（總成本）
-    cost_s = demand * one_way_price
-    cost_mo = monthly_price
-    cost_m = topup_sets * round_trip_price
+    # 累計總成本
+    total_cost += costs[rec] if rec != "無需求" else 0
 
-    costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
-    rec = min(costs, key=costs.get)
     recommend_type.append(rec)
-    total_cost += costs[rec]
-
-    # 平均單價：以淨需求趟數計算
-    if rec=="單程票":
-        avg_price = one_way_price
-        topup = 0
-    elif rec=="月票":
-        avg_price = monthly_price // max(1, demand)
-        topup = 0
-    else:  # 回數票
-        avg_price = (topup_sets * round_trip_price) // max(1, net_demand) if net_demand>0 else 0
-        topup = topup_sets
-
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
@@ -100,11 +108,10 @@ for i in range(1,13):
 # -----------------基本票價表-----------------
 st.subheader("基本票價參考")
 df_basic = pd.DataFrame({
-    "票種": ["單程票","回數票(10趟)","回數票套裝單趟平均價","月票"],
+    "票種": ["單程票","回數票(10趟)","月票"],
     "單價": [
         f"{one_way_price:,}",
         f"{round_trip_price:,} (固定10趟套票)",
-        f"{round_trip_price//multi_ticket_count:,}",  # 新增套裝單趟平均價
         f"{monthly_price:,}"
     ]
 })
@@ -127,7 +134,7 @@ df_overview = pd.DataFrame({
 
 for i,m in enumerate(months,start=1):
     df_overview[m] = [
-        f"{demand*one_way_price:,}",
+        f"{monthly_demand[i]*one_way_price:,}",
         f"{topup_list[i-1]*round_trip_price:,}",
         f"{monthly_price:,}",
         recommend_type[i-1],
