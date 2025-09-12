@@ -4,7 +4,7 @@ import numpy as np
 from datetime import date
 import calendar
 
-st.set_page_config(page_title="高鐵票推薦", layout="wide")
+st.set_page_config(page_title="讓我在台北上班好ㄇQQ", layout="wide")
 st.title("高鐵票推薦")
 st.markdown("比較三種票種（單程 / 回數 / 月票）的成本與回數票使用情況")
 
