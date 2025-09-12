@@ -6,7 +6,7 @@ import calendar
 
 st.set_page_config(page_title="讓我在台北上班好ㄇQQ", layout="wide")
 st.title("高鐵票推薦")
-st.markdown("比較三種票種（單程 / 回數 / 月票）的成本與回數票使用情況")
+st.markdown("比較三種票種（單程 / 回數 / 月票）的成本與回數票使用情況，Max關心您")
 
 # -----------------基本票價設定-----------------
 stations = ["南港", "台北", "板橋", "桃園"]
