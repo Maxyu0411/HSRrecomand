@@ -51,7 +51,7 @@ for m in range(1,13):
     all_weekdays_list.append(len(all_weekdays))
 
 # -----------------回數票每月使用情況-----------------
-df_detail = pd.DataFrame(columns=["Top-up 套數","當月需求趟數","當月剩餘次數"])
+df_detail = pd.DataFrame(columns=["Top-up 次數","當月需求趟數","當月剩餘次數"])
 previous_left = 0
 for i in range(1,13):
     demand = monthly_demand[i]
@@ -66,7 +66,7 @@ total_cost = 0
 recommend_type = []
 for i in range(1,13):
     demand = monthly_demand[i]
-    topup_sets = df_detail.loc[i-1,"Top-up 套數"]
+    topup_sets = df_detail.loc[i-1,"Top-up 次數"]
     cost_s = demand * one_way_price
     cost_m = topup_sets * round_trip_price
     cost_mo = monthly_price
@@ -77,18 +77,18 @@ for i in range(1,13):
 
 # -----------------年度票價明細表格整合回數票使用情況-----------------
 df_overview = pd.DataFrame({
-    "票種":["單程票","回數票","月票","推薦票種","總價","Top-up 套數","當月需求趟數","當月剩餘次數"]
+    "票種":["單程票","回數票","月票","推薦票種","總價","Top-up 次數","當月需求趟數","當月剩餘次數"]
 })
 for i, m in enumerate(months, start=1):
     df_overview[m] = [
         one_way_price*monthly_demand[i],
-        df_detail.loc[i-1,"Top-up 套數"]*round_trip_price,
+        df_detail.loc[i-1,"Top-up 次數"]*round_trip_price,
         monthly_price,
         recommend_type[i-1],
         (one_way_price*monthly_demand[i] if recommend_type[i-1]=="單程票" else
-         df_detail.loc[i-1,"Top-up 套數"]*round_trip_price if recommend_type[i-1]=="回數票" else
+         df_detail.loc[i-1,"Top-up 次數"]*round_trip_price if recommend_type[i-1]=="回數票" else
          monthly_price),
-        df_detail.loc[i-1,"Top-up 套數"],
+        df_detail.loc[i-1,"Top-up 次數"],
         df_detail.loc[i-1,"當月需求趟數"],
         df_detail.loc[i-1,"當月剩餘次數"]
     ]
@@ -117,4 +117,5 @@ df_days = pd.DataFrame([taipei_days_list, [monthly_demand[i]//2 for i in range(1
                        index=["台北上班天數","新竹上班天數","總工作日加總"])
 df_days.columns = months
 st.dataframe(df_days, width='stretch')
+
 
