@@ -92,8 +92,9 @@ else:
         avg_price = cost_mo // demand
         topup = 0
     else:  # 回數票
-        avg_price = cost_m // net_demand  # 淨需求趟數平均
+        avg_price = cost_m // net_demand
         topup = topup_sets
+
 
     # 更新剩餘票
     leftover = previous_left + topup_sets*multi_ticket_count - net_demand
