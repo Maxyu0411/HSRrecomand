@@ -65,7 +65,7 @@ for i in range(1,13):
     # 本月淨需求
     net_demand = max(0, demand - previous_left)
 
-    # 本月 top-up 數量及成本
+    # 計算回數票需要 top-up 套數及成本
     if net_demand > 0:
         topup_sets = (net_demand + multi_ticket_count -1)//multi_ticket_count
         cost_m = topup_sets * round_trip_price
@@ -73,28 +73,27 @@ for i in range(1,13):
         topup_sets = 0
         cost_m = 0
 
-    # 三種票成本
+    # 計算三種票成本
     cost_s = demand * one_way_price
     cost_mo = monthly_price
     costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
 
-    # 本月推薦票種
+    # 推薦票種
     if net_demand == 0:
-    rec = "無需求"
-    avg_price = 0
-    topup = 0
-else:
-    rec = min(costs, key=costs.get)
-    if rec=="單程票":
-        avg_price = one_way_price
+        rec = "無需求"
+        avg_price = 0
         topup = 0
-    elif rec=="月票":
-        avg_price = cost_mo // demand
-        topup = 0
-    else:  # 回數票
-        avg_price = cost_m // net_demand
-        topup = topup_sets
-
+    else:
+        rec = min(costs, key=costs.get)
+        if rec == "單程票":
+            avg_price = one_way_price
+            topup = 0
+        elif rec == "月票":
+            avg_price = cost_mo // demand
+            topup = 0
+        else:  # 回數票
+            avg_price = cost_m // net_demand  # 淨需求趟數平均
+            topup = topup_sets
 
     # 更新剩餘票
     leftover = previous_left + topup_sets*multi_ticket_count - net_demand
