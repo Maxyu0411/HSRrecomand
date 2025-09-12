@@ -45,8 +45,8 @@ monthly_demand = {}
 for m in range(1,13):
     all_weekdays = get_workdays(year, m, [0,1,2,3,4])
     taipei_days = get_workdays(year, m, taipei_workdays)
-    new_chu_days = len(all_weekdays) - len(taipei_days)
-    monthly_demand[m] = new_chu_days*2
+    hsinchu_days = len(all_weekdays) - len(taipei_days)
+    monthly_demand[m] = hsinchu_days*2
     taipei_days_list.append(len(taipei_days))
     all_weekdays_list.append(len(all_weekdays))
 
