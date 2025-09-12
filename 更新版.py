@@ -80,18 +80,20 @@ for i in range(1,13):
 
     # 本月推薦票種
     if net_demand == 0:
-        rec = "無需求"
-        avg_price = 0
+    rec = "無需求"
+    avg_price = 0
+    topup = 0
+else:
+    rec = min(costs, key=costs.get)
+    if rec=="單程票":
+        avg_price = one_way_price
         topup = 0
-    else:
-        rec = min(costs, key=costs.get)
+    elif rec=="月票":
+        avg_price = cost_mo // demand
+        topup = 0
+    else:  # 回數票
+        avg_price = cost_m // net_demand  # 淨需求趟數平均
         topup = topup_sets
-        if rec=="單程票":
-            avg_price = one_way_price
-        elif rec=="月票":
-            avg_price = cost_mo // demand
-        else:  # 回數票
-            avg_price = cost_m // net_demand  # 淨需求趟數平均
 
     # 更新剩餘票
     leftover = previous_left + topup_sets*multi_ticket_count - net_demand
