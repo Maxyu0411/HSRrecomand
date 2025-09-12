@@ -113,9 +113,10 @@ df_basic = pd.DataFrame({
     "單價": [
         f"{one_way_price:,}",  # 單程票單趟價
         f"{round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)",  # 回數票單趟價
-        f"{monthly_price:,} ({monthly_price//max(monthly_demand.values()):,}/趟假設滿使用)"  # 月票平均單價
+        f"{monthly_price:,} ({monthly_price//max(1, monthly_demand[1]):,}/趟假設滿使用)"  # 月票平均單價
     ]
 })
+
 st.dataframe(df_basic.style.hide(axis="index"), width='stretch')
 
 # -----------------年度票價明細-----------------
