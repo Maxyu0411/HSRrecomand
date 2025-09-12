@@ -58,16 +58,23 @@ topup_list = []
 leftover_list = []
 
 previous_left = 0
+previous_cost_left = 0  # 上月剩餘回數票的成本
 for i in range(1, 13):
     demand = monthly_demand[i]  # 本月需求趟數
     net_demand = max(0, demand - previous_left)  # 扣掉上月剩餘後的淨需求
-    
-    # 成本計算
+
+    # 計算需要 top-up 套數
+    topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
+    cost_topup = topup_sets * round_trip_price  # 本月新增購買的回數票成本
+
+    # 本月總使用成本 = 上月剩餘票的成本 + 本月 top-up 成本
+    cost_used = previous_cost_left + cost_topup
+
+    # 三種票成本
     cost_s = demand * one_way_price
     cost_mo = monthly_price
-    topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
-    cost_m = topup_sets * round_trip_price
-    
+    cost_m = cost_used
+
     costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
     rec = min(costs, key=costs.get)
     recommend_type.append(rec)
@@ -79,20 +86,23 @@ for i in range(1, 13):
         topup = 0
         leftover = 0
         previous_left = 0
+        previous_cost_left = 0
     elif rec == "月票":
         avg_price = cost_mo / demand if demand > 0 else 0
         topup = 0
         leftover = 0
         previous_left = 0
+        previous_cost_left = 0
     else:  # 回數票
-        avg_price = cost_m / demand if demand > 0 else 0
-        topup = topup_sets
+        used_from_previous = min(previous_left, demand)  # 上月剩餘使用掉的
         leftover = previous_left + topup_sets*multi_ticket_count - demand
         previous_left = leftover
 
-    avg_price_list.append(avg_price)
-    topup_list.append(topup)
-    leftover_list.append(leftover)
+        # 上月剩餘票成本分攤到本月使用趟數
+        cost_from_previous = (previous_cost_left / previous_left * used_from_previous) if previous_left > 0 else 0
+        previous_cost_left = leftover * (round_trip_price / multi_ticket_count)  # 剩餘票成本
+        avg_price = cost_used / demand if demand > 0 else 0
+        topup = topup_sets
 
 # -----------------年度票價明細表格-----------------
 df_overview = pd.DataFrame({
