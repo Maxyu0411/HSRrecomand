@@ -104,6 +104,12 @@ for i in range(1, 13):
         avg_price = cost_used / demand if demand > 0 else 0
         topup = topup_sets
 
+    # append 到對應 list
+    avg_price_list.append(avg_price)
+    topup_list.append(topup)
+    leftover_list.append(leftover)
+
+
 # -----------------年度票價明細表格-----------------
 df_overview = pd.DataFrame({
     "票種": ["單程票","回數票","月票","推薦票種","推薦票種平均單價","Top-up 次數","當月需求趟數","當月剩餘趟數"]
