@@ -128,7 +128,7 @@ df_overview = pd.DataFrame({
 for i,m in enumerate(months,start=1):
     df_overview[m] = [
         f"{demand*one_way_price:,}",
-        f"{topup_list[i]*round_trip_price:,}",
+        f"{topup_list[i-1]*round_trip_price:,}",
         f"{monthly_price:,}",
         recommend_type[i-1],
         f"{avg_price_list[i-1]:,}",
