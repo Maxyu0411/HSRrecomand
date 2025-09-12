@@ -63,7 +63,7 @@ previous_cost_left = 0  # 上月剩餘回數票成本
 
 for i in range(1, 13):
     demand = monthly_demand[i]
-    net_demand = max(0, demand - previous_left)  # 扣掉上月剩餘後的淨需求
+    net_demand = max(0, demand - previous_left)  # 本月淨需求
     net_demand_list.append(net_demand)
 
     topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
@@ -98,7 +98,6 @@ for i in range(1, 13):
         previous_left = leftover
 
         # 上月剩餘票成本分攤到本月使用
-        cost_from_previous = (previous_cost_left / previous_left * used_from_previous) if previous_left > 0 else 0
         previous_cost_left = leftover * (round_trip_price / multi_ticket_count)
         avg_price = cost_used / demand if demand > 0 else 0
         topup = topup_sets
@@ -107,7 +106,21 @@ for i in range(1, 13):
     topup_list.append(topup)
     leftover_list.append(leftover)
 
-# -----------------年度票價明細表格-----------------
+# -----------------基本票價表-----------------
+st.subheader("基本票價參考")
+df_basic = pd.DataFrame({
+    "票種": ["單程票", "回數票(10趟)", "月票"],
+    "單價": [
+        f"{one_way_price:,}",  # 單程票單趟價
+        f"{round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)",  # 回數票單趟價
+        f"{monthly_price:,} ({monthly_price//max(monthly_demand.values()):,}/趟假設滿使用)"  # 月票平均單價
+    ]
+})
+st.dataframe(df_basic.style.hide(axis="index"), width='stretch')
+
+# -----------------年度票價明細-----------------
+st.subheader(f"{year}年度票價明細與回數票使用情況 (當年度交通成本: {total_cost:,})")
+
 df_overview = pd.DataFrame({
     "票種": [
         "單程票",
@@ -117,44 +130,22 @@ df_overview = pd.DataFrame({
         "推薦票種平均單價",
         "Top-up 次數",
         "當月需求趟數",
-        "當月剩餘趟數",
-        "淨需求趟數"
+        "當月剩餘趟數"
     ]
 })
 
 for i, m in enumerate(months, start=1):
     df_overview[m] = [
-        f"{one_way_price*monthly_demand[i]:,}" if recommend_type[i-1]=="單程票" else "-",
-        f"{topup_list[i-1]*round_trip_price:,}" if recommend_type[i-1]=="回數票" else "-",
-        f"{monthly_price:,}" if recommend_type[i-1]=="月票" else "-",
+        f"{one_way_price*monthly_demand[i]:,} ({one_way_price:,}/趟)" if recommend_type[i-1]=="單程票" else "-",
+        f"{topup_list[i-1]*round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)" if recommend_type[i-1]=="回數票" else "-",
+        f"{monthly_price:,} ({monthly_price//max(1, monthly_demand[i]):,}/趟)" if recommend_type[i-1]=="月票" else "-",
         recommend_type[i-1],
         f"{avg_price_list[i-1]:,.0f}",
         topup_list[i-1],
         monthly_demand[i],
-        leftover_list[i-1],
-        net_demand_list[i-1]
+        leftover_list[i-1]
     ]
 
-# -----------------格式化金額-----------------
-def format_money(x):
-    if isinstance(x, (int, float, np.integer, np.floating)):
-        return f"{x:,.0f}"
-    return x
-
-# -----------------基本票價表-----------------
-st.subheader("基本票價參考")
-df_basic = pd.DataFrame({
-    "票種":["單程票","回數票(10趟)","月票"],
-    "單價":[
-        f"{one_way_price:,}",
-        f"{round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)",
-        f"{monthly_price:,}"
-    ]
-})
-st.dataframe(df_basic.style.hide(axis="index"), width='stretch')
-
-# -----------------年度票價明細-----------------
-st.subheader(f"{year}年度票價明細與回數票使用情況 (當年度交通成本: {total_cost:,})")
 styled_overview = df_overview.style.set_properties(**{
     'text-align': 'center'
 }).hide(axis="index")
@@ -166,4 +157,3 @@ df_days = pd.DataFrame([taipei_days_list, [monthly_demand[i]//2 for i in range(1
                        index=["台北上班天數","新竹上班天數","總工作日"])
 df_days.columns = months
 st.dataframe(df_days.style.set_properties(**{'text-align': 'center'}), width='stretch')
-
