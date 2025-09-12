@@ -5,8 +5,8 @@ from datetime import date
 import calendar
 
 st.set_page_config(page_title="高鐵票推薦", layout="wide")
-st.title("高鐵票推薦")
-st.markdown("比較三種票種（單程 / 回數 / 月票）的成本與回數票使用情況")
+st.title("拜託讓我回台北上班QQ")
+st.markdown("自行比較三種票種（單程 / 回數 / 月票）的成本與回數票使用情況")
 
 # -----------------基本票價設定-----------------
 stations = ["南港", "台北", "板橋", "桃園"]
@@ -117,3 +117,4 @@ df_days = pd.DataFrame([taipei_days_list, [monthly_demand[i]//2 for i in range(1
                        index=["台北上班天數","新竹上班天數","總工作日加總"])
 df_days.columns = months
 st.dataframe(df_days, width='stretch')
+
