@@ -56,19 +56,19 @@ recommend_type = []
 avg_price_list = []
 topup_list = []
 leftover_list = []
+net_demand_list = []
 
 previous_left = 0
-previous_cost_left = 0  # 上月剩餘回數票的成本
+previous_cost_left = 0  # 上月剩餘回數票成本
+
 for i in range(1, 13):
-    demand = monthly_demand[i]  # 本月需求趟數
+    demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)  # 扣掉上月剩餘後的淨需求
+    net_demand_list.append(net_demand)
 
-    # 計算需要 top-up 套數
     topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
-    cost_topup = topup_sets * round_trip_price  # 本月新增購買的回數票成本
-
-    # 本月總使用成本 = 上月剩餘票的成本 + 本月 top-up 成本
-    cost_used = previous_cost_left + cost_topup
+    cost_topup = topup_sets * round_trip_price
+    cost_used = previous_cost_left + cost_topup  # 本月實際回數票成本
 
     # 三種票成本
     cost_s = demand * one_way_price
@@ -80,7 +80,6 @@ for i in range(1, 13):
     recommend_type.append(rec)
     total_cost += costs[rec]
 
-    # 平均單價 & 剩餘次數邏輯
     if rec == "單程票":
         avg_price = cost_s / demand if demand > 0 else 0
         topup = 0
@@ -94,21 +93,19 @@ for i in range(1, 13):
         previous_left = 0
         previous_cost_left = 0
     else:  # 回數票
-        used_from_previous = min(previous_left, demand)  # 上月剩餘使用掉的
+        used_from_previous = min(previous_left, demand)
         leftover = previous_left + topup_sets*multi_ticket_count - demand
         previous_left = leftover
 
-        # 上月剩餘票成本分攤到本月使用趟數
+        # 上月剩餘票成本分攤到本月使用
         cost_from_previous = (previous_cost_left / previous_left * used_from_previous) if previous_left > 0 else 0
-        previous_cost_left = leftover * (round_trip_price / multi_ticket_count)  # 剩餘票成本
+        previous_cost_left = leftover * (round_trip_price / multi_ticket_count)
         avg_price = cost_used / demand if demand > 0 else 0
         topup = topup_sets
 
-    # append 到對應 list
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
-
 
 # -----------------年度票價明細表格-----------------
 df_overview = pd.DataFrame({
@@ -121,7 +118,7 @@ df_overview = pd.DataFrame({
         "Top-up 次數",
         "當月需求趟數",
         "當月剩餘趟數",
-        "淨需求趟數"  # 新增列
+        "淨需求趟數"
     ]
 })
 
@@ -135,9 +132,8 @@ for i, m in enumerate(months, start=1):
         topup_list[i-1],
         monthly_demand[i],
         leftover_list[i-1],
-        net_demand_list[i-1]  # 顯示淨需求趟數
+        net_demand_list[i-1]
     ]
-
 
 # -----------------格式化金額-----------------
 def format_money(x):
@@ -170,3 +166,4 @@ df_days = pd.DataFrame([taipei_days_list, [monthly_demand[i]//2 for i in range(1
                        index=["台北上班天數","新竹上班天數","總工作日"])
 df_days.columns = months
 st.dataframe(df_days.style.set_properties(**{'text-align': 'center'}), width='stretch')
+
