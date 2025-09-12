@@ -112,7 +112,17 @@ for i in range(1, 13):
 
 # -----------------年度票價明細表格-----------------
 df_overview = pd.DataFrame({
-    "票種": ["單程票","回數票","月票","推薦票種","推薦票種平均單價","Top-up 次數","當月需求趟數","當月剩餘趟數"]
+    "票種": [
+        "單程票",
+        "回數票",
+        "月票",
+        "推薦票種",
+        "推薦票種平均單價",
+        "Top-up 次數",
+        "當月需求趟數",
+        "當月剩餘趟數",
+        "淨需求趟數"  # 新增列
+    ]
 })
 
 for i, m in enumerate(months, start=1):
@@ -124,8 +134,10 @@ for i, m in enumerate(months, start=1):
         f"{avg_price_list[i-1]:,.0f}",
         topup_list[i-1],
         monthly_demand[i],
-        leftover_list[i-1]
+        leftover_list[i-1],
+        net_demand_list[i-1]  # 顯示淨需求趟數
     ]
+
 
 # -----------------格式化金額-----------------
 def format_money(x):
