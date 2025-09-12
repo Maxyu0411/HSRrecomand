@@ -83,21 +83,27 @@ for i in range(1,13):
         rec = "無需求"
         avg_price = 0
         topup = 0
+        leftover = 0
     else:
         rec = min(costs, key=costs.get)
         if rec == "單程票":
             avg_price = one_way_price
             topup = 0
+            leftover = 0
         elif rec == "月票":
             avg_price = cost_mo // demand
             topup = 0
+            leftover = 0
         else:  # 回數票
             avg_price = cost_m // net_demand  # 淨需求趟數平均
             topup = topup_sets
+            leftover = previous_left + topup_sets*multi_ticket_count - net_demand
 
     # 更新剩餘票
-    leftover = previous_left + topup_sets*multi_ticket_count - net_demand
-    previous_left = leftover
+    if rec == "回數票":
+        previous_left = leftover
+    else:
+        previous_left = 0
 
     # 累計總成本
     total_cost += costs[rec] if rec != "無需求" else 0
