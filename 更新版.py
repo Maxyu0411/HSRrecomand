@@ -56,15 +56,13 @@ recommend_type = []
 avg_price_list = []
 topup_list = []
 leftover_list = []
-net_demand_list = []
 
 previous_left = 0
 previous_cost_left = 0  # 上月剩餘回數票成本
 
 for i in range(1, 13):
     demand = monthly_demand[i]
-    net_demand = max(0, demand - previous_left)  # 本月淨需求
-    net_demand_list.append(net_demand)
+    net_demand = max(0, demand - previous_left)  # 扣掉上月剩餘後的淨需求
 
     topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
     cost_topup = topup_sets * round_trip_price
@@ -93,11 +91,8 @@ for i in range(1, 13):
         previous_left = 0
         previous_cost_left = 0
     else:  # 回數票
-        used_from_previous = min(previous_left, demand)
         leftover = previous_left + topup_sets*multi_ticket_count - demand
         previous_left = leftover
-
-        # 上月剩餘票成本分攤到本月使用
         previous_cost_left = leftover * (round_trip_price / multi_ticket_count)
         avg_price = cost_used / demand if demand > 0 else 0
         topup = topup_sets
@@ -113,10 +108,9 @@ df_basic = pd.DataFrame({
     "單價": [
         f"{one_way_price:,}",  # 單程票單趟價
         f"{round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)",  # 回數票單趟價
-        f"{monthly_price:,} ({monthly_price//max(1, monthly_demand[1]):,}/趟)"  # 月票平均單價
+        f"{monthly_price:,}"  # 月票總價，不直接顯示單趟價
     ]
 })
-
 st.dataframe(df_basic.style.hide(axis="index"), width='stretch')
 
 # -----------------年度票價明細-----------------
@@ -137,9 +131,9 @@ df_overview = pd.DataFrame({
 
 for i, m in enumerate(months, start=1):
     df_overview[m] = [
-        f"{one_way_price*monthly_demand[i]:,} ({one_way_price:,}/趟)" if recommend_type[i-1]=="單程票" else "-",
-        f"{topup_list[i-1]*round_trip_price:,} ({round_trip_price//multi_ticket_count:,}/趟)" if recommend_type[i-1]=="回數票" else "-",
-        f"{monthly_price:,} ({monthly_price//max(1, monthly_demand[i]):,}/趟)" if recommend_type[i-1]=="月票" else "-",
+        f"{cost_s:,} ({one_way_price:,}/趟)" if recommend_type[i-1]=="單程票" else "-",
+        f"{cost_used:,} ({round_trip_price//multi_ticket_count:,}/趟)" if recommend_type[i-1]=="回數票" else "-",
+        f"{monthly_price:,} ({monthly_price//max(1, demand):,}/趟)" if recommend_type[i-1]=="月票" else "-",
         recommend_type[i-1],
         f"{avg_price_list[i-1]:,.0f}",
         topup_list[i-1],
