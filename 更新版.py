@@ -112,6 +112,9 @@ for i in range(1, 13):
     cost_mo_list.append(cost_mo)
     avg_price_detail.append({"單程票": avg_s, "回數票": avg_m, "月票": avg_mo})
 
+# -----------------計算淨需求趟數列表 -----------------
+net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
+
 # -----------------基本票價表-----------------
 st.subheader("基本票價參考")
 df_basic = pd.DataFrame({
@@ -134,6 +137,7 @@ df_overview = pd.DataFrame({
         "推薦票種",
         "推薦票種平均單價",
         "Top-up 次數",
+        "淨需求趟數",
         "當月需求趟數",
         "當月剩餘趟數"
     ]
@@ -146,13 +150,14 @@ for i,m in enumerate(months,start=1):
         recommend_type[i-1],
         f"{avg_price_list[i-1]:,}",
         topup_list[i-1],
+        net_demand_list[i-1],
         monthly_demand[i],
         leftover_list[i-1]
     ]
 st.dataframe(df_overview, width='stretch')
 
-# -----------------三種票平均單價比較-----------------
-st.subheader(f"{year}年度三種票平均單價比較")
+# -----------------三種票平均單價比較 (Highlight 最低票種) -----------------
+st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
@@ -160,7 +165,13 @@ for i,m in enumerate(months,start=1):
         avg_price_detail[i-1]["回數票"],
         avg_price_detail[i-1]["月票"]
     ]
-st.dataframe(df_avg, width='stretch')
+
+def highlight_min(s):
+    is_min = s == s.min()
+    return ['background-color: #90ee90' if v else '' for v in is_min]
+
+styled_avg = df_avg.style.apply(lambda x: highlight_min(x[1:]), axis=0)  # 不對票種欄位
+st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
 st.subheader(f"{year}年度台北/新竹上班天數")
