@@ -37,7 +37,7 @@ def get_workdays(year, month, workdays, holidays=[]):
             if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays]
 
 # -----------------國定假日-----------------
-holidays = [
+holidays = {
     2025: [
         "2025-01-01",  # 元旦
         "2025-01-25","2025-01-26","2025-01-27","2025-01-28","2025-01-29","2025-01-30","2025-01-31","2025-02-01","2025-02-02",  # 春節
