@@ -111,15 +111,15 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
-# -----------------固定第二欄寬度 140px -----------------
-col2_style = [
+# -----------------固定欄位寬度設定-----------------
+fixed_style = [
     {
-        'selector': 'th:nth-child(2), td:nth-child(2)',
-        'props': [
-            ('min-width', '140px'),
-            ('max-width', '140px'),
-            ('width', '140px')
-        ]
+        'selector': 'th:nth-child(1), td:nth-child(1)',  # 第一欄
+        'props': [('min-width', '140px'), ('max-width', '140px'), ('width', '140px')]
+    },
+    {
+        'selector': 'th:nth-child(2), td:nth-child(2)',  # 第二欄
+        'props': [('min-width', '140px'), ('max-width', '140px'), ('width', '140px')]
     }
 ]
 
@@ -133,7 +133,7 @@ df_basic = pd.DataFrame({
         f"{monthly_price:,}"
     ]
 })
-st.dataframe(df_basic.style.set_table_styles(col2_style), width='stretch')
+st.dataframe(df_basic.style.set_table_styles(fixed_style), width='stretch')
 
 # -----------------年度票價明細-----------------
 st.subheader(f"{year}年度票價明細與回數票使用情況 (當年度交通成本: {total_cost:,})")
@@ -155,7 +155,7 @@ for i,m in enumerate(months,start=1):
         monthly_demand[i],
         leftover_list[i-1]
     ]
-st.dataframe(df_overview.style.set_table_styles(col2_style), width='stretch')
+st.dataframe(df_overview.style.set_table_styles(fixed_style), width='stretch')
 
 # -----------------三種票平均單價比較-----------------
 st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
@@ -171,10 +171,10 @@ def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
     for month in df.columns[1:]:
         min_val = df[month].min()
-        styles.loc[df[month] == min_val, month] = 'background-color: #ffff99; color: black'
+        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
     return styles
 
-styled_avg = df_avg.style.set_table_styles(col2_style).apply(highlight_min_per_month, axis=None)
+styled_avg = df_avg.style.set_table_styles(fixed_style).apply(highlight_min_per_month, axis=None)
 st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
@@ -182,4 +182,4 @@ st.subheader(f"{year}年度台北/新竹上班天數")
 df_days = pd.DataFrame({"項目": ["台北上班天數","新竹上班天數","總工作日"]})
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
-st.dataframe(df_days.style.set_table_styles(col2_style), width='stretch')
+st.dataframe(df_days.style.set_table_styles(fixed_style), width='stretch')
