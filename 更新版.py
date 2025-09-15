@@ -56,19 +56,16 @@ recommend_type = []
 avg_price_list = []
 topup_list = []
 leftover_list = []
-single_costs = []
-multi_costs = []
-monthly_costs = []
+
+single_costs, multi_costs, monthly_costs = [], [], []
 
 previous_left = 0
 
 for i in range(1,13):
     demand = monthly_demand[i]
-
-    # 本月淨需求
     net_demand = max(0, demand - previous_left)
 
-    # 計算回數票需要 top-up 套數及成本
+    # 回數票成本
     if net_demand > 0:
         topup_sets = (net_demand + multi_ticket_count -1)//multi_ticket_count
         cost_m = topup_sets * round_trip_price
@@ -76,12 +73,15 @@ for i in range(1,13):
         topup_sets = 0
         cost_m = 0
 
-    # 計算三種票成本
     cost_s = demand * one_way_price
     cost_mo = monthly_price
+
+    single_costs.append(cost_s)
+    multi_costs.append(cost_m)
+    monthly_costs.append(cost_mo)
+
     costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
 
-    # 推薦票種
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
@@ -98,26 +98,21 @@ for i in range(1,13):
             topup = 0
             leftover = 0
         else:  # 回數票
-            avg_price = cost_m // net_demand  # 淨需求趟數平均
+            avg_price = cost_m // net_demand
             topup = topup_sets
             leftover = previous_left + topup_sets*multi_ticket_count - net_demand
 
-    # 更新剩餘票
     if rec == "回數票":
         previous_left = leftover
     else:
         previous_left = 0
 
-    # 累計總成本
     total_cost += costs[rec] if rec != "無需求" else 0
 
     recommend_type.append(rec)
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
-    single_costs.append(cost_s)
-    multi_costs.append(cost_m)
-    monthly_costs.append(cost_mo)
 
 # -----------------基本票價表-----------------
 st.subheader("基本票價參考")
@@ -131,7 +126,7 @@ df_basic = pd.DataFrame({
 })
 st.dataframe(df_basic.style.hide(axis="index"), width='stretch')
 
-# 統一欄寬樣式
+# -----------------表格樣式統一 (固定欄寬) -----------------
 common_styles = [
     {"selector": "th.col_heading", "props": [("min-width", "70px"), ("text-align", "center")]},
     {"selector": "td", "props": [("text-align", "center")]}
@@ -166,10 +161,7 @@ st.dataframe(styled_overview, width='stretch')
 # -----------------票種平均單價比較表-----------------
 st.subheader(f"{year}年度三種票平均單價比較")
 
-avg_single = []
-avg_multi = []
-avg_monthly = []
-
+avg_single, avg_multi, avg_monthly = [], [], []
 for i in range(12):
     demand = monthly_demand[i+1]
     if demand > 0:
@@ -182,13 +174,11 @@ for i in range(12):
         avg_monthly.append(0)
 
 df_avg = pd.DataFrame(index=["單程票", "回數票", "月票"], columns=months)
-
 for i,m in enumerate(months):
     df_avg.loc["單程票",m] = avg_single[i]
     df_avg.loc["回數票",m] = avg_multi[i]
     df_avg.loc["月票",m] = avg_monthly[i]
 
-# highlight 每月最低平均單價
 def highlight_min(s):
     is_min = s == s.min()
     return ['background-color: lightgreen' if v else '' for v in is_min]
@@ -199,11 +189,9 @@ st.dataframe(styled_avg, width='stretch')
 # -----------------台北/新竹上班天數表格-----------------
 st.subheader(f"{year}年度台北/新竹上班天數")
 df_days = pd.DataFrame(index=["台北上班天數","新竹上班天數","總工作日"], columns=months)
-
 df_days.loc["台北上班天數"] = taipei_days_list
 df_days.loc["新竹上班天數"] = [monthly_demand[i]//2 for i in range(1,13)]
 df_days.loc["總工作日"] = all_weekdays_list
 
 styled_days = df_days.style.set_table_styles(common_styles)
 st.dataframe(styled_days, width='stretch')
-
