@@ -191,4 +191,7 @@ st.subheader(f"{year}年度台北/新竹上班天數")
 df_days = pd.DataFrame({"項目": ["台北上班天數","新竹上班天數","總工作日"]})
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
+
+# 第一欄固定寬度 140px
 st.dataframe(df_days.style.set_table_styles(fixed_col_style), width='stretch')
+
