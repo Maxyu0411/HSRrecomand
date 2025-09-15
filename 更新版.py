@@ -63,7 +63,6 @@ for i in range(1,13):
     demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)
 
-    # 計算回數票 top-up 套數與成本
     if net_demand > 0:
         topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count
         cost_m = topup_sets * round_trip_price
@@ -71,12 +70,10 @@ for i in range(1,13):
         topup_sets = 0
         cost_m = 0
 
-    # 單程票與月票成本
     cost_s = demand * one_way_price
     cost_mo = monthly_price
     costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
 
-    # 推薦票種與平均單價
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
@@ -95,31 +92,27 @@ for i in range(1,13):
         else:  # 回數票
             avg_price = round(cost_m / net_demand)
             topup = topup_sets
-            leftover = topup_sets * multi_ticket_count - net_demand  # 只計算當月剩餘
+            leftover = topup_sets * multi_ticket_count - net_demand
 
-    # 更新剩餘票數
     if rec == "回數票":
         previous_left = leftover
     else:
         previous_left = 0
 
-    # 累計總成本
     total_cost += costs[rec] if rec != "無需求" else 0
 
-    # 儲存結果
     recommend_type.append(rec)
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
 
-    # 三種票平均單價（跟票價明細連動）
     avg_price_detail.append({
         "單程票": one_way_price if demand>0 else 0,
         "回數票": round(cost_m / net_demand) if net_demand>0 else 0,
         "月票": round(cost_mo / demand) if demand>0 else 0
     })
 
-# -----------------highlight 樣式切換-----------------
+# -----------------highlight 樣式-----------------
 highlight_style = st.radio(
     "選擇 Highlight 樣式",
     ["亮色主題（黃底黑字）", "深色主題（綠底白字）"],
@@ -133,7 +126,6 @@ def highlight_min(s):
     else:
         return ['background-color: #2e7d32; color: white; font-weight: bold;' if v else '' for v in is_min]
 
-# -----------------固定第一欄寬度樣式-----------------
 common_styles = [
     {'selector': 'th.col0', 'props': [('min-width', '120px'), ('max-width', '120px')]}
 ]
@@ -148,7 +140,7 @@ df_basic = pd.DataFrame({
         f"{monthly_price:,}"
     ]
 })
-styled_basic = df_basic.style.set_table_styles(common_styles).hide(axis="index")
+styled_basic = df_basic.style.set_table_styles(common_styles)
 st.dataframe(styled_basic, width='stretch')
 
 # -----------------年度票價明細-----------------
@@ -177,8 +169,7 @@ for i,m in enumerate(months,start=1):
         leftover_list[i-1]
     ]
 styled_overview = df_overview.style.set_properties(**{'text-align':'center'})\
-    .set_table_styles(common_styles)\
-    .hide(axis="index")
+    .set_table_styles(common_styles)
 st.dataframe(styled_overview, width='stretch')
 
 # -----------------三種票平均單價比較-----------------
@@ -192,8 +183,7 @@ for i,m in enumerate(months,start=1):
     ]
 styled_avg = df_avg.style.format(precision=0)\
     .apply(lambda s: highlight_min(s) if s.name != "票種" else ['']*len(s), axis=0)\
-    .set_table_styles(common_styles)\
-    .hide(axis="index")
+    .set_table_styles(common_styles)
 st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
@@ -204,4 +194,5 @@ df_days = pd.DataFrame({
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
 styled_days = df_days.style.set_properties(**{'text-align':'center'})\
-    .
+    .set_table_styles(common_styles)
+st.dataframe(styled_days, width='stretch')
