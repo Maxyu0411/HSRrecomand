@@ -36,17 +36,19 @@ def get_workdays(year, month, workdays, holidays=[]):
     return [date(year, month, d) for d in range(1, last_day+1)
             if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays]
 
-# -----------------國定假日-----------------
-holidays = {
-    2025: ["2025-01-01","2025-02-28","2025-02-17","2025-02-18","2025-02-19",
-           "2025-02-20","2025-02-21","2025-02-22","2025-04-04","2025-05-01",
-           "2025-06-20","2025-09-27","2025-10-10"],  # 補班假期也包含
-    2026: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19",
-           "2026-02-20","2026-02-21","2026-04-04","2026-05-01","2026-06-09",
-           "2026-09-16","2026-10-09"]
-}
-holidays = [pd.to_datetime(d) for d in holidays.get(year, [])]
-
+# -----------------國定假日(範例，需完整補齊補假)-----------------
+holidays = [
+    date(year, 1, 1),  # 元旦
+    date(year, 2, 10), date(year, 2, 11), date(year, 2, 12), date(year, 2, 13), date(year, 2, 14),  # 春節
+    date(year, 2, 15),  # 補假
+    date(year, 4, 4),  # 兒童節
+    date(year, 4, 5),  # 清明節
+    date(year, 5, 1),  # 勞動節
+    date(year, 6, 25),  # 端午節
+    date(year, 9, 28),  # 中秋節
+    date(year, 10, 10),  # 國慶日
+    # ... 可依官方公告補齊完整日期
+]
 
 # -----------------計算台北/新竹工作日及需求趟數-----------------
 taipei_days_list = []
@@ -119,6 +121,12 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
+# -----------------固定欄寬樣式-----------------
+fixed_col_style = [{
+    'selector': 'th:nth-child(2), td:nth-child(2)',
+    'props': [('min-width', '140px'), ('max-width', '140px')]
+}]
+
 # -----------------基本票價表-----------------
 st.subheader("基本票價參考")
 df_basic = pd.DataFrame({
@@ -154,7 +162,7 @@ for i,m in enumerate(months,start=1):
 st.dataframe(df_overview.style.set_table_styles(fixed_col_style), width='stretch')
 
 # -----------------三種票平均單價比較-----------------
-st.subheader(f"{year}年度三種票平均單價比較")
+st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
