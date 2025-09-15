@@ -168,7 +168,7 @@ for i,m in enumerate(months,start=1):
 st.dataframe(df_overview.style.set_table_styles(fixed_col_style), width='stretch')
 
 # -----------------三種票平均單價比較-----------------
-st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
+st.subheader(f"{year}年度三種票平均單價比較")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
