@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import date
+from datetime import date, timedelta
 import calendar
 
 st.set_page_config(page_title="讓我在台北上班好ㄇQQ", layout="wide")
@@ -30,26 +30,24 @@ taipei_workdays = [weekday_map[x] for x in taipei_workdays_str]
 
 year = st.number_input("選擇年度", min_value=2025, max_value=2030, value=2025)
 
-# -----------------國定假日與補假日-----------------
-holidays = [
-    # 2025
-    date(2025,1,1), date(2025,1,28), date(2025,1,29), date(2025,1,30), date(2025,1,31),
-    date(2025,2,1), date(2025,2,2), date(2025,2,3), date(2025,2,28), date(2025,4,4),
-    date(2025,4,5), date(2025,6,19), date(2025,9,28), date(2025,10,24), date(2025,10,25),
-    date(2025,12,25),
-    # 2026
-    date(2026,1,1), date(2026,2,17), date(2026,2,18), date(2026,2,19), date(2026,2,20),
-    date(2026,2,21), date(2026,2,22), date(2026,2,23), date(2026,4,4), date(2026,4,5),
-    date(2026,6,19), date(2026,9,28), date(2026,10,25), date(2026,10,26), date(2026,12,25)
-]
+# -----------------取得當月工作日(含國定假日)-----------------
+# 範例國定假日(含補假，僅示範)
+holidays_dict = {
+    2025: [
+        date(2025,1,1), date(2025,2,17), date(2025,2,18), date(2025,2,19), date(2025,2,20), date(2025,2,21), date(2025,2,22),
+        date(2025,4,4), date(2025,4,5), date(2025,6,14), date(2025,9,27), date(2025,10,10)
+    ],
+    2026: [
+        date(2026,1,1), date(2026,2,5), date(2026,2,6), date(2026,2,7), date(2026,2,8), date(2026,2,9), date(2026,2,10),
+        date(2026,4,4), date(2026,4,5), date(2026,6,4), date(2026,9,15), date(2026,10,9)
+    ]
+}
 
-# -----------------取得當月工作日（排除假日）-----------------
 def get_workdays(year, month, workdays):
     _, last_day = calendar.monthrange(year, month)
-    all_days = [date(year, month, d) for d in range(1, last_day+1)]
-    return [d for d in all_days if d.weekday() in workdays and d not in holidays]
+    return [date(year, month, d) for d in range(1, last_day+1)
+            if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays_dict.get(year, [])]
 
-# -----------------計算台北/新竹工作日及需求趟數-----------------
 taipei_days_list = []
 all_weekdays_list = []
 monthly_demand = {}
@@ -77,6 +75,7 @@ for i in range(1, 13):
     demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)
 
+    # 回數票成本計算(即使不推薦也要計算)
     topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
     cost_m = topup_sets * round_trip_price
     cost_s = net_demand * one_way_price
@@ -85,9 +84,9 @@ for i in range(1, 13):
     avg_s = one_way_price if net_demand>0 else 0
     avg_m = round(cost_m / net_demand) if net_demand>0 else 0
     avg_mo = round(cost_mo / demand) if demand>0 else 0
-
     avg_dict = {"單程票": avg_s, "回數票": avg_m, "月票": avg_mo}
 
+    # 推薦票種
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
@@ -125,6 +124,12 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
+# -----------------統一樣式-----------------
+basic_style = [{
+    'selector': 'th:nth-child(2), td:nth-child(2)',
+    'props': [('min-width', '140px'), ('max-width', '140px')]
+}]
+
 # -----------------基本票價表-----------------
 st.subheader("基本票價參考")
 df_basic = pd.DataFrame({
@@ -135,7 +140,6 @@ df_basic = pd.DataFrame({
         f"{monthly_price:,}"
     ]
 })
-basic_style = [{'selector': 'th:nth-child(2), td:nth-child(2)', 'props': [('min-width', '140px'), ('max-width', '140px')]}]
 st.dataframe(df_basic.style.set_table_styles(basic_style), width='stretch')
 
 # -----------------年度票價明細-----------------
@@ -172,9 +176,9 @@ for i,m in enumerate(months,start=1):
 
 def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
-    for month in df.columns[1:]:
+    for month in df.columns[1:]:  # 跳過票種名稱
         min_val = df[month].min()
-        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
+        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #b3ffb3'
     return styles
 
 styled_avg = df_avg.style.set_table_styles(basic_style).apply(highlight_min_per_month, axis=None)
