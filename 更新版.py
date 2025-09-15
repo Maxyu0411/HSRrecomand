@@ -44,6 +44,7 @@ holidays = [
     date(2026,6,19), date(2026,9,28), date(2026,10,25), date(2026,10,26), date(2026,12,25)
 ]
 
+# -----------------取得當月工作日-----------------
 def get_workdays(year, month, workdays):
     _, last_day = calendar.monthrange(year, month)
     all_days = [date(year, month, d) for d in range(1, last_day+1)]
@@ -145,18 +146,26 @@ st.dataframe(styled_overview)
 
 # -----------------三種票平均單價比較-----------------
 st.subheader(f"{year}年度三種票平均單價比較（以淨需求趟數計算）")
+# 計算每月淨需求
+net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 df_avg_price = pd.DataFrame({
     "票種":["單程票","回數票","月票"],
-    **{m: [round(monthly_demand[i+1]>0 and monthly_demand[i+1]*one_way_price//monthly_demand[i+1] or 0,
-               round(topup_list[i]*round_trip_price/net_demand) if net_demand>0 else 0,
-               round(monthly_price/net_demand) if net_demand>0 else 0)
-        for i, net_demand in enumerate([max(0, monthly_demand[j+1]- (leftover_list[j-1] if j>0 else 0)) for j in range(12)])]
-       for m,i in zip(months,range(12))}
 })
+for idx, m in enumerate(months):
+    s = [
+        round(one_way_price if net_demand_list[idx]>0 else 0),
+        round((topup_list[idx]*round_trip_price/net_demand_list[idx]) if net_demand_list[idx]>0 else 0),
+        round((monthly_price/net_demand_list[idx]) if net_demand_list[idx]>0 else 0)
+    ]
+    df_avg_price[m] = s
+
 # 高亮最低價
 def highlight_min(s):
-    is_min = s.astype(float) == s.astype(float).min()
-    return ['background-color: lightyellow' if v else '' for v in is_min]
+    s = s.astype(float)
+    is_min = s == s.min()
+    # 第一欄票種不要高亮
+    return ['' if i==0 else 'background-color: lightyellow' if v else '' for i,v in enumerate(is_min)]
+
 styled_avg = df_avg_price.style.apply(highlight_min, axis=0).set_properties(**{'width':'140px','text-align':'center'})
 st.dataframe(styled_avg)
 
