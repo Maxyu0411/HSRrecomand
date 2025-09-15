@@ -169,14 +169,15 @@ for i,m in enumerate(months,start=1):
         avg_price_detail[i-1]["月票"]
     ]
 
-def highlight_min(row):
-    # row 是一列，row[0] 是票種名稱，不參與比較
-    values = row[1:]
-    is_min = values == values.min()
-    return [''] + ['color: black; background-color: #ffff99' if v else '' for v in is_min]
+def highlight_min_col(col):
+    # col 是一個月份列，col[0] 是票種欄位，不參與比較
+    values = col[1:]
+    min_val = values.min()
+    return [''] + ['color: black; background-color: #ffff99' if v == min_val else '' for v in values]
 
-styled_avg = df_avg.style.apply(highlight_min, axis=1)
+styled_avg = df_avg.style.apply(highlight_min_col, axis=0)
 st.dataframe(styled_avg, width='stretch')
+
 
 
 # -----------------台北/新竹上班天數表格-----------------
