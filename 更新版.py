@@ -63,7 +63,7 @@ holidays = {
         "2026-10-24","2026-10-25"  # 光復節
     ]
 }
-holidays = [pd.to_datetime(d) for d in holidays_dict.get(year, [])]
+holidays = [pd.to_datetime(d) for d in holidays.get(year, [])]
 
 # -----------------計算台北/新竹工作日及需求趟數-----------------
 taipei_days_list = []
