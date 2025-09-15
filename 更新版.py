@@ -30,32 +30,27 @@ taipei_workdays = [weekday_map[x] for x in taipei_workdays_str]
 
 year = st.number_input("選擇年度", min_value=2025, max_value=2030, value=2025)
 
-# -----------------國定假日 (2025-2026) -----------------
-# 包含固定假日、過年、端午、中秋、彈性放假與補假
+# -----------------國定假日(含補假)-----------------
 holiday_dict = {
     2025: [
         date(2025,1,1), date(2025,1,20), date(2025,1,21), date(2025,1,22),  # 春節
-        date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,6,20),    # 和其他假日
+        date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,6,20),
         date(2025,9,28), date(2025,10,10),
-        # 彈性放假補假
-        date(2025,2,15), date(2025,2,16), date(2025,4,5)
+        date(2025,2,15), date(2025,2,16), date(2025,4,5)  # 彈性補假
     ],
     2026: [
-        date(2026,1,1), date(2026,1,29), date(2026,1,30), date(2026,1,31),   # 春節
+        date(2026,1,1), date(2026,1,29), date(2026,1,30), date(2026,1,31),  # 春節
         date(2026,2,28), date(2026,4,4), date(2026,5,1), date(2026,6,9),
         date(2026,9,17), date(2026,10,10),
-        # 彈性放假補假
-        date(2026,1,26), date(2026,1,27)
+        date(2026,1,26), date(2026,1,27)  # 彈性補假
     ]
 }
 
+# -----------------取得當月工作日-----------------
 def get_workdays(year, month, workdays):
     _, last_day = calendar.monthrange(year, month)
     return [date(year, month, d) for d in range(1, last_day+1)
             if date(year, month, d).weekday() in workdays and date(year, month, d) not in holiday_dict.get(year, [])]
-    # 排除國定假日
-    days = [d for d in days if d not in holidays_dict.get(year, [])]
-    return days
 
 taipei_days_list = []
 all_weekdays_list = []
@@ -132,10 +127,10 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
-# -----------------固定第一欄寬度樣式-----------------
+# -----------------固定欄位寬度-----------------
 fixed_col_style = [{
-    'selector': 'th:first-child, td:first-child',
-    'props': [('min-width','140px'),('max-width','140px')]
+    'selector': 'th:nth-child(1), td:nth-child(1)',
+    'props': [('min-width', '140px'), ('max-width', '140px')]
 }]
 
 # -----------------基本票價表-----------------
@@ -173,7 +168,7 @@ for i,m in enumerate(months,start=1):
 st.dataframe(df_overview.style.set_table_styles(fixed_col_style), width='stretch')
 
 # -----------------三種票平均單價比較-----------------
-st.subheader(f"{year}年度三種票平均單價比較")
+st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
@@ -184,7 +179,7 @@ for i,m in enumerate(months,start=1):
 
 def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
-    for month in df.columns[1:]:
+    for month in df.columns[1:]:  # 跳過票種名稱
         min_val = df[month].min()
         styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
     return styles
@@ -197,7 +192,4 @@ st.subheader(f"{year}年度台北/新竹上班天數")
 df_days = pd.DataFrame({"項目": ["台北上班天數","新竹上班天數","總工作日"]})
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
-
-# 第一欄固定寬度 140px
 st.dataframe(df_days.style.set_table_styles(fixed_col_style), width='stretch')
-
