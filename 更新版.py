@@ -169,12 +169,15 @@ for i,m in enumerate(months,start=1):
         avg_price_detail[i-1]["月票"]
     ]
 
-def highlight_min(s):
-    is_min = s == s.min()
-    return ['color: black; background-color: #ffff99' if v else '' for v in is_min]
+def highlight_min(row):
+    # row 是一列，row[0] 是票種名稱，不參與比較
+    values = row[1:]
+    is_min = values == values.min()
+    return [''] + ['color: black; background-color: #ffff99' if v else '' for v in is_min]
 
-styled_avg = df_avg.style.apply(lambda x: highlight_min(x[1:]), axis=0)
+styled_avg = df_avg.style.apply(highlight_min, axis=1)
 st.dataframe(styled_avg, width='stretch')
+
 
 # -----------------台北/新竹上班天數表格-----------------
 st.subheader(f"{year}年度台北/新竹上班天數")
