@@ -169,14 +169,17 @@ for i,m in enumerate(months,start=1):
         avg_price_detail[i-1]["月票"]
     ]
 
-def highlight_min_col(col):
-    # col 是一個月份列，col[0] 是票種欄位，不參與比較
-    values = col[1:]
-    min_val = values.min()
-    return [''] + ['color: black; background-color: #ffff99' if v == min_val else '' for v in values]
+def highlight_min_per_month(df):
+    # df: 票種 x 月份的 DataFrame，第一欄是票種名稱
+    styles = pd.DataFrame('', index=df.index, columns=df.columns)
+    for month in df.columns[1:]:  # 跳過第一欄票種名稱
+        min_val = df[month].min()
+        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
+    return styles
 
-styled_avg = df_avg.style.apply(highlight_min_col, axis=0)
+styled_avg = df_avg.style.apply(highlight_min_per_month, axis=None)
 st.dataframe(styled_avg, width='stretch')
+
 
 
 
