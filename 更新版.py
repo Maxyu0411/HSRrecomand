@@ -72,44 +72,48 @@ for i in range(1,13):
 
     cost_s = demand * one_way_price
     cost_mo = monthly_price
-    costs = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo}
 
+    # -----------------計算平均單價-----------------
+    avg_s = one_way_price if demand>0 else 0
+    avg_m = round(cost_m / net_demand) if net_demand>0 else 0
+    avg_mo = round(cost_mo / demand) if demand>0 else 0
+
+    # -----------------推薦票種（用淨需求趟數平均單價比較）-----------------
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
         topup = 0
         leftover = 0
     else:
-        rec = min(costs, key=costs.get)
-        if rec == "單程票":
-            avg_price = one_way_price
-            topup = 0
-            leftover = 0
-        elif rec == "月票":
-            avg_price = round(cost_mo / demand)
+        avg_dict = {"單程票": avg_s, "回數票": avg_m, "月票": avg_mo}
+        rec = min(avg_dict, key=avg_dict.get)
+        avg_price = avg_dict[rec]
+
+        if rec == "單程票" or rec == "月票":
             topup = 0
             leftover = 0
         else:  # 回數票
-            avg_price = round(cost_m / net_demand)
             topup = topup_sets
             leftover = topup_sets * multi_ticket_count - net_demand
 
-    if rec == "回數票":
-        previous_left = leftover
-    else:
-        previous_left = 0
+    # 更新剩餘票數
+    previous_left = leftover if rec=="回數票" else 0
 
-    total_cost += costs[rec] if rec != "無需求" else 0
+    # 累計總成本
+    cost_lookup = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo, "無需求":0}
+    total_cost += cost_lookup[rec]
 
+    # 儲存
     recommend_type.append(rec)
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
 
+    # 三種票平均單價明細
     avg_price_detail.append({
-        "單程票": one_way_price if demand>0 else 0,
-        "回數票": round(cost_m / net_demand) if net_demand>0 else 0,
-        "月票": round(cost_mo / demand) if demand>0 else 0
+        "單程票": avg_s,
+        "回數票": avg_m,
+        "月票": avg_mo
     })
 
 # -----------------highlight 樣式-----------------
