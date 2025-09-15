@@ -164,7 +164,9 @@ for i,m in enumerate(months,start=1):
         leftover_list[i-1]
     ]
 
-styled_overview = df_overview.style.set_properties(**{'text-align':'center'}).set_table_styles(common_styles).hide(axis="index")
+styled_overview = df_overview.style.set_properties(**{'text-align':'center'})\
+    .set_table_styles(common_styles)\
+    .hide_index()  # <-- 完全隱藏索引
 st.dataframe(styled_overview, width='stretch')
 
 # -----------------三種票平均單價比較-----------------
@@ -178,7 +180,10 @@ for i,m in enumerate(months,start=1):
         round(monthly_price/monthly_demand[i]) if monthly_demand[i]>0 else 0
     ]
 
-styled_avg = df_avg.style.format(precision=0).apply(highlight_min, axis=0).set_table_styles(common_styles).hide(axis="index")
+styled_avg = df_avg.style.format(precision=0)\
+    .apply(highlight_min, axis=0)\
+    .set_table_styles(common_styles)\
+    .hide_index()  # <-- 完全隱藏索引
 st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
@@ -189,5 +194,7 @@ df_days = pd.DataFrame({
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
 
-styled_days = df_days.style.set_properties(**{'text-align':'center'}).set_table_styles(common_styles).hide(axis="index")
+styled_days = df_days.style.set_properties(**{'text-align':'center'})\
+    .set_table_styles(common_styles)\
+    .hide_index()  # <-- 完全隱藏索引
 st.dataframe(styled_days, width='stretch')
