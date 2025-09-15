@@ -158,7 +158,7 @@ for i,m in enumerate(months,start=1):
         f"{topup_list[i-1]*round_trip_price:,}",
         f"{monthly_price:,}",
         recommend_type[i-1],
-        f"{round(avg_price_list[i-1]):,}",   # 四捨五入
+        f"{round(avg_price_list[i-1]):,}",
         topup_list[i-1],
         monthly_demand[i],
         leftover_list[i-1]
@@ -166,7 +166,8 @@ for i,m in enumerate(months,start=1):
 
 styled_overview = df_overview.style.set_properties(**{'text-align':'center'})\
     .set_table_styles(common_styles)\
-st.dataframe(styled_overview, width='stretch', hide_index=True)
+    .hide(axis="index")  # <-- 正確隱藏索引
+st.dataframe(styled_overview, width='stretch')
 
 # -----------------三種票平均單價比較-----------------
 st.subheader(f"{year}年度三種票平均單價比較")
@@ -182,7 +183,8 @@ for i,m in enumerate(months,start=1):
 styled_avg = df_avg.style.format(precision=0)\
     .apply(highlight_min, axis=0)\
     .set_table_styles(common_styles)\
-st.dataframe(styled_avg, width='stretch', hide_index=True)
+    .hide(axis="index")
+st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
 st.subheader(f"{year}年度台北/新竹上班天數")
@@ -194,4 +196,5 @@ for i,m in enumerate(months,start=1):
 
 styled_days = df_days.style.set_properties(**{'text-align':'center'})\
     .set_table_styles(common_styles)\
-st.dataframe(styled_days, width='stretch', hide_index=True)
+    .hide(axis="index")
+st.dataframe(styled_days, width='stretch')
