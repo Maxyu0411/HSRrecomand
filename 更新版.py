@@ -50,7 +50,7 @@ for m in range(1,13):
     taipei_days_list.append(len(taipei_days))
     all_weekdays_list.append(len(all_weekdays))
 
-# -----------------年度票價計算 (淨需求邏輯)-----------------
+# -----------------年度票價計算-----------------
 total_cost = 0
 previous_left = 0
 recommend_type = []
@@ -66,43 +66,45 @@ for i in range(1, 13):
     demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)
 
-    # -----------------成本計算-----------------
-    cost_s = net_demand * one_way_price
-    topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand>0 else 0
+    # 計算回數票 top-up 套數與成本
+    topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
     cost_m = topup_sets * round_trip_price
+    cost_s = net_demand * one_way_price
     cost_mo = monthly_price
 
-    # -----------------平均單價 (基於淨需求趟數)-----------------
+    # 平均單價 (基於淨需求趟數)
     avg_s = one_way_price if net_demand>0 else 0
     avg_m = round(cost_m / net_demand) if net_demand>0 else 0
     avg_mo = round(cost_mo / demand) if demand>0 else 0
 
-    # -----------------推薦票種-----------------
+    # 推薦票種邏輯
+    avg_dict = {"單程票": avg_s, "回數票": avg_m, "月票": avg_mo}
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
         topup = 0
         leftover = 0
         previous_left = 0
+    elif net_demand <= multi_ticket_count and cost_m > cost_s:
+        rec = "單程票"
+        avg_price = avg_s
+        topup = 0
+        leftover = 0
+        previous_left = 0
     else:
-        avg_dict = {"單程票": avg_s, "回數票": avg_m, "月票": avg_mo}
         rec = min(avg_dict, key=avg_dict.get)
         avg_price = avg_dict[rec]
-
         if rec == "回數票":
-            topup = topup_sets
             leftover = topup_sets * multi_ticket_count - net_demand
             previous_left = leftover
+            topup = topup_sets
         else:
-            topup = 0
             leftover = 0
             previous_left = 0
+            topup = 0
 
-    # 累計總成本
-    cost_lookup = {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo, "無需求":0}
-    total_cost += cost_lookup[rec]
+    total_cost += {"單程票": cost_s, "回數票": cost_m, "月票": cost_mo, "無需求":0}[rec]
 
-    # 儲存結果
     recommend_type.append(rec)
     avg_price_list.append(avg_price)
     topup_list.append(topup)
