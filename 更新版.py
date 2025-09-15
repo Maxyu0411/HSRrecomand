@@ -65,6 +65,7 @@ holidays = {
 }
 holidays = [pd.to_datetime(d) for d in holidays.get(year, [])]
 
+
 # -----------------計算台北/新竹工作日及需求趟數-----------------
 taipei_days_list = []
 all_weekdays_list = []
