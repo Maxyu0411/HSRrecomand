@@ -157,7 +157,7 @@ for i,m in enumerate(months,start=1):
 st.dataframe(df_overview, width='stretch')
 
 # -----------------三種票平均單價比較 (Highlight 最低票種) -----------------
-st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
+st.subheader(f"{year}年度三種票平均單價比較")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
@@ -168,7 +168,7 @@ for i,m in enumerate(months,start=1):
 
 def highlight_min(s):
     is_min = s == s.min()
-    return ['background-color: #90ee90' if v else '' for v in is_min]
+    return ['background-color: #ffff99' if v else '' for v in is_min]
 
 styled_avg = df_avg.style.apply(lambda x: highlight_min(x[1:]), axis=0)  # 不對票種欄位
 st.dataframe(styled_avg, width='stretch')
