@@ -58,6 +58,8 @@ topup_list = []
 leftover_list = []
 
 previous_left = 0
+# 每月各票平均單價
+avg_price_detail = []
 
 for i in range(1,13):
     demand = monthly_demand[i]
@@ -86,11 +88,11 @@ for i in range(1,13):
             topup = 0
             leftover = 0
         elif rec == "月票":
-            avg_price = round(cost_mo / demand)  # 四捨五入
+            avg_price = round(cost_mo / demand)
             topup = 0
             leftover = 0
         else:
-            avg_price = round(cost_m / net_demand)  # 四捨五入
+            avg_price = round(cost_m / net_demand)
             topup = topup_sets
             leftover = previous_left + topup_sets*multi_ticket_count - net_demand
 
@@ -104,6 +106,13 @@ for i in range(1,13):
     avg_price_list.append(avg_price)
     topup_list.append(topup)
     leftover_list.append(leftover)
+
+    # 三種票當月平均單價（跟票價明細連動）
+    avg_price_detail.append({
+        "單程票": one_way_price if demand>0 else 0,
+        "回數票": round(cost_m / net_demand) if net_demand>0 else 0,
+        "月票": round(cost_mo / demand) if demand>0 else 0
+    })
 
 # -----------------highlight 樣式切換-----------------
 highlight_style = st.radio(
@@ -140,10 +149,10 @@ st.dataframe(styled_basic, width='stretch')
 # -----------------年度票價明細-----------------
 st.subheader(f"{year}年度票價明細與回數票使用情況 (當年度交通成本: {total_cost:,})")
 df_overview = pd.DataFrame({
-    "票種": [
-        "單程票",
-        "回數票",
-        "月票",
+    "項目": [
+        "單程票成本",
+        "回數票成本",
+        "月票成本",
         "推薦票種",
         "推薦票種平均單價",
         "Top-up 次數",
@@ -158,7 +167,7 @@ for i,m in enumerate(months,start=1):
         f"{topup_list[i-1]*round_trip_price:,}",
         f"{monthly_price:,}",
         recommend_type[i-1],
-        f"{round(avg_price_list[i-1]):,}",
+        f"{avg_price_list[i-1]:,}",
         topup_list[i-1],
         monthly_demand[i],
         leftover_list[i-1]
@@ -166,18 +175,17 @@ for i,m in enumerate(months,start=1):
 
 styled_overview = df_overview.style.set_properties(**{'text-align':'center'})\
     .set_table_styles(common_styles)\
-    .hide(axis="index")  # <-- 正確隱藏索引
+    .hide(axis="index")
 st.dataframe(styled_overview, width='stretch')
 
-# -----------------三種票平均單價比較-----------------
+# -----------------三種票平均單價比較（跟票價明細連動）-----------------
 st.subheader(f"{year}年度三種票平均單價比較")
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
-
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
-        one_way_price if monthly_demand[i]>0 else 0,
-        round(round_trip_price/multi_ticket_count) if monthly_demand[i]>0 else 0,
-        round(monthly_price/monthly_demand[i]) if monthly_demand[i]>0 else 0
+        avg_price_detail[i-1]["單程票"],
+        avg_price_detail[i-1]["回數票"],
+        avg_price_detail[i-1]["月票"]
     ]
 
 styled_avg = df_avg.style.format(precision=0)\
