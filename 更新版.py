@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import date
+from datetime import date, timedelta
 import calendar
 
 st.set_page_config(page_title="讓我在台北上班好ㄇQQ", layout="wide")
@@ -30,34 +30,31 @@ taipei_workdays = [weekday_map[x] for x in taipei_workdays_str]
 
 year = st.number_input("選擇年度", min_value=2025, max_value=2030, value=2025)
 
-# -----------------取得當月工作日-----------------
-def get_workdays(year, month, workdays, holidays=[]):
-    _, last_day = calendar.monthrange(year, month)
-    return [date(year, month, d) for d in range(1, last_day+1)
-            if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays]
-
-# -----------------國定假日（含補假）-----------------
-# 這裡簡單示範，可根據官方公告再完整列出
-holidays_dict = {
-    2025: [
-        date(2025,1,1), date(2025,1,21), date(2025,1,22), date(2025,1,23), date(2025,1,24), date(2025,1,25),
-        date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,6,20), date(2025,9,1), date(2025,10,10)
-    ],
-    2026: [
-        date(2026,1,1), date(2026,2,9), date(2026,2,10), date(2026,2,11), date(2026,2,12), date(2026,2,13),
-        date(2026,2,14), date(2026,2,28), date(2026,4,4), date(2026,5,1), date(2026,6,9), date(2026,9,21),
-        date(2026,10,10)
-    ]
+# -----------------國定假日(含補班)-----------------
+holidays = {
+    2025: ["2025-01-01","2025-02-28","2025-02-17","2025-02-18","2025-02-19",
+           "2025-02-20","2025-02-21","2025-02-22","2025-04-04","2025-05-01",
+           "2025-06-20","2025-09-27","2025-10-10"],  # 補班假期也包含
+    2026: ["2026-01-01","2026-02-16","2026-02-17","2026-02-18","2026-02-19",
+           "2026-02-20","2026-02-21","2026-04-04","2026-05-01","2026-06-09",
+           "2026-09-16","2026-10-09"]
 }
-holidays = holidays_dict.get(year, [])
+holidays = [pd.to_datetime(d) for d in holidays.get(year, [])]
 
-# -----------------計算台北/新竹工作日及需求趟數-----------------
+# -----------------取得當月工作日-----------------
+def get_workdays(year, month, workdays):
+    _, last_day = calendar.monthrange(year, month)
+    all_days = [date(year, month, d) for d in range(1, last_day+1)]
+    workdays_list = [d for d in all_days if d.weekday() in workdays and pd.to_datetime(d) not in holidays]
+    return workdays_list
+
 taipei_days_list = []
 all_weekdays_list = []
 monthly_demand = {}
+
 for m in range(1,13):
-    all_weekdays = get_workdays(year, m, [0,1,2,3,4], holidays)
-    taipei_days = get_workdays(year, m, taipei_workdays, holidays)
+    all_weekdays = get_workdays(year, m, [0,1,2,3,4])
+    taipei_days = get_workdays(year, m, taipei_workdays)
     hsinchu_days = len(all_weekdays) - len(taipei_days)
     monthly_demand[m] = hsinchu_days*2
     taipei_days_list.append(len(taipei_days))
@@ -79,6 +76,7 @@ for i in range(1, 13):
     demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)
 
+    # 計算成本
     topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand > 0 else 0
     cost_m = topup_sets * round_trip_price
     cost_s = net_demand * one_way_price
@@ -87,9 +85,9 @@ for i in range(1, 13):
     avg_s = one_way_price if net_demand>0 else 0
     avg_m = round(cost_m / net_demand) if net_demand>0 else 0
     avg_mo = round(cost_mo / demand) if demand>0 else 0
-
     avg_dict = {"單程票": avg_s, "回數票": avg_m, "月票": avg_mo}
 
+    # 推薦票種
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
@@ -127,7 +125,7 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
-# -----------------固定第一欄樣式-----------------
+# -----------------固定第一欄寬度-----------------
 first_col_style = [{
     'selector': 'th:nth-child(1), td:nth-child(1)',
     'props': [('min-width', '140px'), ('max-width', '140px'), ('text-align', 'center')]
@@ -177,16 +175,11 @@ for i,m in enumerate(months,start=1):
         avg_price_detail[i-1]["月票"]
     ]
 
-# 轉成文字 + 千分位，避免欄寬受數字影響
-for col in df_avg.columns[1:]:
-    df_avg[col] = df_avg[col].apply(lambda x: f"{x:,}" if x>0 else "0")
-
 def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
     for month in df.columns[1:]:
-        vals = df[month].str.replace(",","").astype(int)
-        min_val = vals.min()
-        styles.loc[vals == min_val, month] = 'background-color: #ffff99; color: black; text-align:center;'
+        min_val = df[month].min()
+        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
     return styles
 
 styled_avg = df_avg.style.set_table_styles(first_col_style).apply(highlight_min_per_month, axis=None)
@@ -197,7 +190,4 @@ st.subheader(f"{year}年度台北/新竹上班天數")
 df_days = pd.DataFrame({"項目": ["台北上班天數","新竹上班天數","總工作日"]})
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
-# 轉成文字，置中
-for col in df_days.columns[1:]:
-    df_days[col] = df_days[col].apply(lambda x: f"{x:,}")
 st.dataframe(df_days.style.set_table_styles(first_col_style), width='stretch')
