@@ -50,7 +50,7 @@ for m in range(1,13):
     taipei_days_list.append(len(taipei_days))
     all_weekdays_list.append(len(all_weekdays))
 
-# -----------------年度票價計算-----------------
+# -----------------年度票價計算 (淨需求邏輯)-----------------
 total_cost = 0
 previous_left = 0
 recommend_type = []
@@ -66,24 +66,18 @@ for i in range(1, 13):
     demand = monthly_demand[i]
     net_demand = max(0, demand - previous_left)
 
-    # 回數票成本 always 計算
-    if net_demand > 0:
-        topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count
-        cost_m = topup_sets * round_trip_price
-    else:
-        topup_sets = 0
-        cost_m = 0
-
-    # 單程票與月票成本
-    cost_s = demand * one_way_price
+    # -----------------成本計算-----------------
+    cost_s = net_demand * one_way_price
+    topup_sets = (net_demand + multi_ticket_count - 1) // multi_ticket_count if net_demand>0 else 0
+    cost_m = topup_sets * round_trip_price
     cost_mo = monthly_price
 
-    # 平均單價
-    avg_s = one_way_price if demand>0 else 0
+    # -----------------平均單價-----------------
+    avg_s = one_way_price if net_demand>0 else 0
     avg_m = round(cost_m / net_demand) if net_demand>0 else 0
     avg_mo = round(cost_mo / demand) if demand>0 else 0
 
-    # 推薦票種（用平均單價比較）
+    # -----------------推薦票種-----------------
     if net_demand == 0:
         rec = "無需求"
         avg_price = 0
@@ -176,4 +170,3 @@ df_days = pd.DataFrame({
 for i,m in enumerate(months,start=1):
     df_days[m] = [taipei_days_list[i-1], monthly_demand[i]//2, all_weekdays_list[i-1]]
 st.dataframe(df_days, width='stretch')
-
