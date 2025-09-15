@@ -72,7 +72,7 @@ for i in range(1, 13):
     cost_m = topup_sets * round_trip_price
     cost_mo = monthly_price
 
-    # -----------------平均單價-----------------
+    # -----------------平均單價 (基於淨需求趟數)-----------------
     avg_s = one_way_price if net_demand>0 else 0
     avg_m = round(cost_m / net_demand) if net_demand>0 else 0
     avg_mo = round(cost_mo / demand) if demand>0 else 0
@@ -156,8 +156,9 @@ for i,m in enumerate(months,start=1):
     ]
 st.dataframe(df_overview, width='stretch')
 
-# -----------------三種票平均單價比較 (Highlight 最低票種) -----------------
-st.subheader(f"{year}年度三種票平均單價比較")
+# -----------------三種票平均單價比較 (基於淨需求趟數，高亮最低) -----------------
+st.subheader(f"{year}年度三種票平均單價比較 (最低單價高亮)")
+
 df_avg = pd.DataFrame({"票種": ["單程票","回數票","月票"]})
 for i,m in enumerate(months,start=1):
     df_avg[m] = [
@@ -168,9 +169,9 @@ for i,m in enumerate(months,start=1):
 
 def highlight_min(s):
     is_min = s == s.min()
-    return ['background-color: #ffff99' if v else '' for v in is_min]
+    return ['color: black; background-color: #ffff99' if v else '' for v in is_min]
 
-styled_avg = df_avg.style.apply(lambda x: highlight_min(x[1:]), axis=0)  # 不對票種欄位
+styled_avg = df_avg.style.apply(lambda x: highlight_min(x[1:]), axis=0)
 st.dataframe(styled_avg, width='stretch')
 
 # -----------------台北/新竹上班天數表格-----------------
