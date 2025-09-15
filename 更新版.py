@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import date, timedelta
+from datetime import date
 import calendar
 
 st.set_page_config(page_title="讓我在台北上班好ㄇQQ", layout="wide")
@@ -30,21 +30,11 @@ taipei_workdays = [weekday_map[x] for x in taipei_workdays_str]
 
 year = st.number_input("選擇年度", min_value=2025, max_value=2030, value=2025)
 
-# -----------------國定假日 (含補假) -----------------
-# 這裡簡單示範，實際可擴充每年完整列表
-holidays = {
-    2025: [date(2025,1,1), date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,10,10)],
-    2026: [date(2026,1,1), date(2026,2,17), date(2026,2,18), date(2026,4,4), date(2026,5,1), date(2026,10,10)]
-}
-
 # -----------------取得當月工作日-----------------
 def get_workdays(year, month, workdays):
     _, last_day = calendar.monthrange(year, month)
-    days = [date(year, month, d) for d in range(1, last_day+1)
+    return [date(year, month, d) for d in range(1, last_day+1)
             if date(year, month, d).weekday() in workdays]
-    # 扣掉國定假日
-    days = [d for d in days if d not in holidays.get(year, [])]
-    return days
 
 taipei_days_list = []
 all_weekdays_list = []
@@ -121,14 +111,16 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
-# -----------------設定第二欄寬度-----------------
+# -----------------固定第二欄寬度 140px -----------------
 col2_style = [
-    {'selector': 'th:nth-child(2), td:nth-child(2)',
-     'props': [
-         ('min-width', '140px'),
-         ('max-width', '140px'),
-         ('width', '140px')
-     ]}
+    {
+        'selector': 'th:nth-child(2), td:nth-child(2)',
+        'props': [
+            ('min-width', '140px'),
+            ('max-width', '140px'),
+            ('width', '140px')
+        ]
+    }
 ]
 
 # -----------------基本票價表-----------------
@@ -177,9 +169,9 @@ for i,m in enumerate(months,start=1):
 
 def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
-    for month in df.columns[1:]:  # 跳過票種名稱
+    for month in df.columns[1:]:
         min_val = df[month].min()
-        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #d9ead3'
+        styles.loc[df[month] == min_val, month] = 'background-color: #ffff99; color: black'
     return styles
 
 styled_avg = df_avg.style.set_table_styles(col2_style).apply(highlight_min_per_month, axis=None)
