@@ -30,28 +30,26 @@ taipei_workdays = [weekday_map[x] for x in taipei_workdays_str]
 
 year = st.number_input("選擇年度", min_value=2025, max_value=2030, value=2025)
 
-# -----------------國定假日設定（含補假）-----------------
+# -----------------國定假日與補假-----------------
+# 假設固定好 2025 和 2026 的國定假日，包含補假
 holidays_2025 = [
-    date(2025,1,1), date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,6,14),
-    date(2025,9,27), date(2025,10,10),
-    # 過年假期
-    date(2025,1,29), date(2025,1,30), date(2025,1,31), date(2025,2,1), date(2025,2,2)
+    date(2025,1,1), date(2025,1,20), date(2025,1,21), date(2025,1,22), date(2025,1,23), date(2025,1,24),
+    date(2025,2,28), date(2025,4,4), date(2025,5,1), date(2025,6,25), date(2025,10,10)
 ]
-
 holidays_2026 = [
-    date(2026,1,1), date(2026,2,17), date(2026,4,4), date(2026,5,1), date(2026,6,4),
-    date(2026,9,15), date(2026,10,10),
-    # 過年假期
-    date(2026,2,5), date(2026,2,6), date(2026,2,7), date(2026,2,8), date(2026,2,9)
+    date(2026,1,1), date(2026,2,8), date(2026,2,9), date(2026,2,10), date(2026,2,11), date(2026,2,12),
+    date(2026,2,13), date(2026,2,28), date(2026,4,4), date(2026,5,1), date(2026,6,14), date(2026,10,10)
 ]
-
 holidays_dict = {2025: holidays_2025, 2026: holidays_2026}
 
-# -----------------取得當月工作日（排除假日）-----------------
+# -----------------取得當月工作日-----------------
 def get_workdays(year, month, workdays):
     _, last_day = calendar.monthrange(year, month)
-    return [date(year, month, d) for d in range(1, last_day+1)
-            if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays_dict.get(year, [])]
+    days = [date(year, month, d) for d in range(1, last_day+1)
+            if date(year, month, d).weekday() in workdays]
+    # 排除國定假日
+    days = [d for d in days if d not in holidays_dict.get(year, [])]
+    return days
 
 taipei_days_list = []
 all_weekdays_list = []
@@ -128,9 +126,9 @@ for i in range(1, 13):
 
 net_demand_list = [max(0, monthly_demand[i] - (leftover_list[i-2] if i>1 else 0)) for i in range(1,13)]
 
-# -----------------固定欄位寬度設定-----------------
+# -----------------固定第一欄寬度樣式-----------------
 fixed_col_style = [{
-    'selector': 'th:nth-child(2), td:nth-child(2)',
+    'selector': 'th:first-child, td:first-child',
     'props': [('min-width','140px'),('max-width','140px')]
 }]
 
@@ -182,7 +180,7 @@ def highlight_min_per_month(df):
     styles = pd.DataFrame('', index=df.index, columns=df.columns)
     for month in df.columns[1:]:
         min_val = df[month].min()
-        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #d9ead3'
+        styles.loc[df[month] == min_val, month] = 'color: black; background-color: #ffff99'
     return styles
 
 styled_avg = df_avg.style.set_table_styles(fixed_col_style).apply(highlight_min_per_month, axis=None)
