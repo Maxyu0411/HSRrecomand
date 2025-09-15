@@ -166,8 +166,7 @@ for i,m in enumerate(months,start=1):
 
 styled_overview = df_overview.style.set_properties(**{'text-align':'center'})\
     .set_table_styles(common_styles)\
-    .hide_index()  # <-- 完全隱藏索引
-st.dataframe(styled_overview, width='stretch')
+st.dataframe(styled_overview, width='stretch', hide_index=True)
 
 # -----------------三種票平均單價比較-----------------
 st.subheader(f"{year}年度三種票平均單價比較")
@@ -183,8 +182,7 @@ for i,m in enumerate(months,start=1):
 styled_avg = df_avg.style.format(precision=0)\
     .apply(highlight_min, axis=0)\
     .set_table_styles(common_styles)\
-    .hide_index()  # <-- 完全隱藏索引
-st.dataframe(styled_avg, width='stretch')
+st.dataframe(styled_avg, width='stretch', hide_index=True)
 
 # -----------------台北/新竹上班天數表格-----------------
 st.subheader(f"{year}年度台北/新竹上班天數")
@@ -196,5 +194,4 @@ for i,m in enumerate(months,start=1):
 
 styled_days = df_days.style.set_properties(**{'text-align':'center'})\
     .set_table_styles(common_styles)\
-    .hide_index()  # <-- 完全隱藏索引
-st.dataframe(styled_days, width='stretch')
+st.dataframe(styled_days, width='stretch', hide_index=True)
