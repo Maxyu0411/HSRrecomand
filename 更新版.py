@@ -36,8 +36,8 @@ def get_workdays(year, month, workdays, holidays=[]):
     return [date(year, month, d) for d in range(1, last_day+1)
             if date(year, month, d).weekday() in workdays and date(year, month, d) not in holidays]
 
-# -----------------國定假日(範例，需完整補齊補假)-----------------
-holidays = [
+# -----------------國定假日(完整字典，需自行補齊未來年度)-----------------
+holidays = {
     2025: [
         "2025-01-01",  # 元旦
         "2025-01-25","2025-01-26","2025-01-27","2025-01-28","2025-01-29","2025-01-30","2025-01-31","2025-02-01","2025-02-02",  # 春節
@@ -61,19 +61,26 @@ holidays = [
         "2026-09-25","2026-09-26","2026-09-27","2026-09-28",  # 中秋節、教師節
         "2026-10-09","2026-10-10","2026-10-11","2026-10-12",  # 國慶日
         "2026-10-24","2026-10-25"  # 光復節
-]
-]
+    ]
+}
+
 # -----------------計算台北/新竹工作日及需求趟數-----------------
 taipei_days_list = []
 all_weekdays_list = []
 monthly_demand = {}
-for m in range(1,13):
-    all_weekdays = get_workdays(year, m, [0,1,2,3,4], holidays)
-    taipei_days = get_workdays(year, m, taipei_workdays, holidays)
+
+# 把 holidays 轉成 datetime 才能跟 date 比較
+holidays_this_year = [pd.to_datetime(d).date() for d in holidays.get(year, [])]
+
+for m in range(1, 13):
+    all_weekdays = get_workdays(year, m, [0,1,2,3,4], holidays_this_year)
+    taipei_days = get_workdays(year, m, taipei_workdays, holidays_this_year)
     hsinchu_days = len(all_weekdays) - len(taipei_days)
-    monthly_demand[m] = hsinchu_days*2
+
+    monthly_demand[m] = hsinchu_days * 2
     taipei_days_list.append(len(taipei_days))
     all_weekdays_list.append(len(all_weekdays))
+
 
 # -----------------年度票價計算-----------------
 total_cost = 0
